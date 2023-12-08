@@ -17,7 +17,12 @@ class LoginPage extends React.Component {
                       accountValid: true,
                       showCreateAccount: false,
                       showAccountCreated: false,
-                      accountCreatedEmail: ""};
+                      accountCreatedEmail: "",
+                      githubIcon: ['fab','github'],
+                      googleIcon: ['fab','google'],
+                      githubLabel: "Sign in with GitHub",
+                      googleLabel: "Sign in with Google"
+                    };
     }
 
     componentDidUpdate() {
@@ -57,6 +62,17 @@ class LoginPage extends React.Component {
                            accountValid: aValid});
         }
     }
+
+    handleOAuthLogin = (provider) => {
+      console.log(provider);
+      window.open(`/auth/${provider}`,"_self");
+    }
+  
+    handleOAuthLoginClick = (provider) => {
+      this.setState({[provider + "Icon"] : "spinner",
+                     [provider + "Label"] : "Connecting..."});
+      setTimeout(() => this.handleOAuthLogin(provider),1000);
+   }
 
     createAccountDone = (data) => {
         this.props.createAccount(data);
@@ -169,6 +185,21 @@ class LoginPage extends React.Component {
                     <button id="resetPasswordBtn" className="nav-link btn btn-link">Reset Password</button>
                 </li>
                 </ul>
+                <div className="centered">
+                <button type="button" className="btn btn-github" id="button111"
+                  onClick={() => this.handleOAuthLoginClick("github")}>
+                  <FontAwesomeIcon icon={this.state.githubIcon} 
+                                   className={this.state.githubIcon == "spinner" ? "fa-spin" : ""}/>
+                  &nbsp;{this.state.githubLabel}
+                </button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" className="btn btn-google" id="googleButton"
+                  onClick={() => this.handleOAuthLoginClick("google")}>
+                  <FontAwesomeIcon icon={this.state.googleIcon} 
+                                   className={this.state.googleIcon == "spinner" ? "fa-spin" : ""}/>
+                  &nbsp;{this.state.googleLabel}
+                </button>
+                </div>
             </div>  
         )
     }

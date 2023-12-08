@@ -431,3 +431,11 @@ button::-moz-focus-inner {
   left: 60%;
   top: 50%;
 }
+
+.btn-github{
+  background: gray;
+}
+
+.btn-google{
+  background: lightblue;
+}
