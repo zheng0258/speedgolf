@@ -76,33 +76,7 @@ class App extends React.Component {
         .then((response) => response.json())
         .then((obj) => {
           if (obj.isAuthenticated) {
-            const userId = obj.user.id + '@' + obj.user.provider;
-            if (!this.accountExists(userId)) {
-              const data = {
-                accountData: {
-                  email: userId,
-                  password: "",
-                  securityQuestion: "",
-                  securityAnswer: ""
-                },
-                identityData: {
-                  displayName: obj.user.id,
-                  profilePic: obj.user.profileImageUrl
-                },
-                speedgolfData: {
-                  bio: "",
-                  homeCourse: "",
-                  firstRound: "",
-                  personalBest: {strokes: "", minutes: "", seconds: "", course: ""},
-                  clubs: {},
-                  clubComments: ""
-                },
-                rounds: [],
-                roundCount: 0
-              };
-              this.createAccount(data);
-            }
-            this.logInUser(userId);
+            this.logInUser(obj.user);
           }
         })
     } 
@@ -125,8 +99,24 @@ class App extends React.Component {
 
   //Account Management methods
    
-  accountExists = (email) => {
-    return (localStorage.getItem(email) !== null);
+  accountExists = async(email) => {
+    const res = await fetch("/user/" + email);
+    return (res.status === 200);
+  }
+
+  getAccountData = (email) => {
+    return JSON.parse(localStorage.getItem(email));
+  }
+
+  authenticateUser = async(id, pw) => {
+    const url = "/auth/login?username=" + id + 
+      "&password=" + pw;
+    const res = await fetch(url,{method: 'POST'});
+    if (res.status == 200) { //successful login!
+      return true;
+    } else { //Unsuccessful login
+      return false;
+    } 
   }
 
   accountValid = (email, pw) => {
@@ -138,20 +128,46 @@ class App extends React.Component {
     return (userData.accountData.password === pw);   
   }
 
-  logInUser = (email) => {
-      const data = JSON.parse(localStorage.getItem(email));
-      this.setState({userData: data,
-                     mode: AppMode.FEED,
-                     authenticated: true});
+  logInUser = (userObj) => {
+    this.setState({userData: userObj,
+                   mode: AppMode.FEED,
+                   authenticated: true});
+}
+
+  createAccount = async(data) => {
+    const url = '/users/' + data.accountData.id;
+    const res = await fetch(url, {
+      headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+        method: 'POST',
+        body: JSON.stringify(data)}); 
+    if (res.status == 201) { 
+        return("New account created with email " + data.accountData.id);
+    } else { 
+        const resText = await res.text();
+        return("New account was not created. " + resText);
+    }
   }
 
-  createAccount = (data) => {
-    localStorage.setItem(data.accountData.email, JSON.stringify(data));
-  }
-
-  updateUserData = (data) => {
-   localStorage.setItem(data.accountData.email,JSON.stringify(data));
-   this.setState({userData: data});
+  updateUserData = async(data) => {
+    localStorage.setItem(data.accountData.email,JSON.stringify(data));
+    this.setState({userData: data});
+    const url = '/users/' + data.accountData.id;
+    const res = await fetch(url, {
+      headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+        method: 'PUT',
+        body: JSON.stringify(data)}); 
+    if (res.status == 201) { 
+        return("Account was updated with email " + data.accountData.id);
+    } else { 
+        const resText = await res.text();
+        return("Account was not updated. " + resText);
+    }
   }
 
   //Round Management methods
@@ -229,7 +245,7 @@ class App extends React.Component {
                        logInUser={this.logInUser}
                        createAccount={this.createAccount}
                        accountExists={this.accountExists}
-                       accountValid={this.accountValid}/>, 
+                       authenticateUser={this.authenticateUser}/>,
           FeedMode:
             <FeedPage modalOpen={this.state.modalOpen}
                       toggleModalOpen={this.toggleModalOpen} 

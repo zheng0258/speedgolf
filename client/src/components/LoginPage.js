@@ -44,27 +44,34 @@ class LoginPage extends React.Component {
         } 
     } 
 
-    handleSubmit = (e) => {
-        e.preventDefault();
-         //Is the email field valid
-         const eValid = !this.email.current.validity.typeMismatch && 
+    handleSubmit = async (e) => {
+      e.preventDefault();
+          //Is the email field valid
+          const eValid = !this.email.current.validity.typeMismatch && 
                           !this.email.current.validity.valueMissing;
-         //Is the password field valid?
-         const pValid = !this.password.current.validity.patternMismatch && 
-                            !this.password.current.validity.valueMissing;
-        //Is account valid?
-        const aValid = eValid && pValid && this.props.accountValid(this.email.current.value,this.password.current.value);
-        if (eValid && pValid && aValid) {
-            this.props.logInUser(this.email.current.value);
-        } else { //at least one field is invalid--trigger re-render
-            this.setState({emailValid: eValid,
-                           passwordValid: pValid,
-                           accountValid: aValid});
-        }
-    }
+          //Is the password field valid?
+          const pValid = !this.password.current.validity.patternMismatch && 
+                          !this.password.current.validity.valueMissing;
+      if (!eValid || !pValid) {
+          this.setState({
+              emailValid: eValid,
+              passwordValid: pValid,
+              accountValid: true});
+          return;
+      }
+      //Can we log in user?
+      const aValid = await this.props.authenticateUser(this.email.current.value,this.password.current.value);
+      if (aValid) {
+          window.open('/', '_self'); //App.componentDidMount() takes it from here
+      } else { //at least one field is invalid--trigger re-render of LoginPage component
+          this.setState({emailValid: eValid,
+                          passwordValid: pValid,
+                          accountValid: aValid});
+      } 
+  
+  }
 
     handleOAuthLogin = (provider) => {
-      console.log(provider);
       window.open(`/auth/${provider}`,"_self");
     }
   
@@ -74,12 +81,12 @@ class LoginPage extends React.Component {
       setTimeout(() => this.handleOAuthLogin(provider),1000);
    }
 
-    createAccountDone = (data) => {
-        this.props.createAccount(data);
+    createAccountDone = async (data) => {
+        const result = await this.props.createAccount(data);
         this.setState({showCreateAccount: false,
-                       showAccountCreated: true,
-                        accountCreatedEmail: data.accountData.email});
-    }
+                        showAccountCreated: true,
+                        accountCreatedResult: result});
+      }
 
     createAccountCancel = () => {
         this.setState({showCreateAccount: false});
