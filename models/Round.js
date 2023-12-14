@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
 
-const DetailSchema = new mongoose.Schema({
-  stroke: {type: Number},
-  par: {type: Number},
-  time: {type: Number}
-})
 
 const RoundSchema = new mongoose.Schema({
     date: {type: Date, required: true},
@@ -15,7 +10,6 @@ const RoundSchema = new mongoose.Schema({
     minutes: {type: Number, required: true, min: 1, max: 240},
     seconds: {type: Number, required: true, min: 0, max: 60},
     notes: {type: String},
-    details: [DetailSchema]
   },
   {
     toObject: {

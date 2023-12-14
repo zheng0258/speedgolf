@@ -172,32 +172,35 @@ class App extends React.Component {
 
   //Round Management methods
 
-  addRound = (newRoundData) => {
-    const newRounds = [...this.state.userData.rounds];
-    const newRoundCount = this.state.userData.roundCount + 1;
-    console.log(newRoundCount);
-    newRoundData.roundNum = newRoundCount;
-    newRounds.push(newRoundData);
-    const newUserData = {
-      accountData: this.state.userData.accountData,
-      identityData: this.state.userData.identityData,
-      speedgolfProfileData: this.state.userData.speedgolfProfileData,
-      rounds: newRounds, 
-      roundCount: newRoundCount
-    };
-    localStorage.setItem(newUserData.accountData.email,JSON.stringify(newUserData));
-    this.setState({userData: newUserData});
+  addRound = async(newRoundData) => {
+    const url = "/rounds/" + this.state.userData.accountData.id;
+    let res = await fetch(url, {
+                  method: 'POST',
+                  headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                                },
+                          method: 'POST',
+                          body: JSON.stringify(newRoundData)
+                }); 
+    if (res.status == 201) { 
+      const newRounds = [...this.state.userData.rounds];
+      newRounds.push(newRoundData);
+      const newUserData = {accountData: this.state.userData.accountData,
+                           identityData: this.state.userData.identityData,
+                           speedgolfData: this.state.userData.speedgolfData,
+                           rounds: newRounds};
+      this.setState({userData: newUserData});
+      return("New round logged.");
+    } else { 
+      const resText = await res.text();
+      return("New Round could not be logged. " + resText);
+    }
   }
 
-  updateRound = (newRoundData) => {
-    const newRounds = [...this.state.userData.rounds];
-    let r;
-    for (r = 0; r < newRounds.length; ++r) {
-        if (newRounds[r].roundNum === newRoundData.roundNum) {
-            break;
-        }
-    }
-    newRounds[r] = newRoundData;
+  updateRound = async(newRoundData,editId) => {
+    let newRounds = [...this.state.userData.rounds];
+    newRounds[editId] = newRoundData;
     const newUserData = {
       accountData: this.state.userData.accountData,
       identityData: this.state.userData.identityData,
@@ -205,12 +208,31 @@ class App extends React.Component {
       rounds: newRounds, 
       roundCount: this.state.userData.roundCount
     }
-    localStorage.setItem(newUserData.accountData.email,JSON.stringify(newUserData));
-    this.setState({userData: newUserData}); 
+    let newUserData1 = {...newUserData}
+    newUserData1.editId = editId
+    const url = "/rounds/" + this.state.userData.accountData.id;
+    console.log(url);
+    let res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                    },
+              method: 'PUT',
+              body: JSON.stringify(newUserData1)
+    }); 
+    if (res.status == 201) { 
+      this.setState({userData: newUserData}); 
+      return("New round updated.");
+    } else { 
+      const resText = await res.text();
+      return("New Round could not be updated. " + resText);
+    }
+
   }
 
-  deleteRound = (deleteId) => {
-    const newRounds = [...this.state.userData.rounds];
+  deleteRound = async(deleteId) => {
+    let newRounds = [...this.state.userData.rounds];
     newRounds.splice(deleteId,1)
     const newUserData = {
       accountData: this.state.userData.accountData,
@@ -219,8 +241,23 @@ class App extends React.Component {
       rounds: newRounds, 
       roundCount: this.state.userData.roundCount
     }
-    localStorage.setItem(newUserData.accountData.email,JSON.stringify(newUserData));
-    this.setState({userData: newUserData}); 
+    const url = "/rounds/" + this.state.userData.accountData.id;
+    let res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                    },
+              method: 'DELETE',
+              body: JSON.stringify({index: deleteId})
+    }); 
+    if (res.status == 201) { 
+      this.setState({userData: newUserData}); 
+      return("The round is deleted.");
+    } else { 
+      const resText = await res.text();
+      return("The Round could not be deleted. " + resText);
+    }
   }
 
   render() {
