@@ -17,7 +17,12 @@ class LoginPage extends React.Component {
                       accountValid: true,
                       showCreateAccount: false,
                       showAccountCreated: false,
-                      accountCreatedEmail: ""};
+                      accountCreatedEmail: "",
+                      githubIcon: ['fab','github'],
+                      googleIcon: ['fab','google'],
+                      githubLabel: "Sign in with GitHub",
+                      googleLabel: "Sign in with Google"
+                    };
     }
 
     componentDidUpdate() {
@@ -39,31 +44,49 @@ class LoginPage extends React.Component {
         } 
     } 
 
-    handleSubmit = (e) => {
-        e.preventDefault();
-         //Is the email field valid
-         const eValid = !this.email.current.validity.typeMismatch && 
+    handleSubmit = async (e) => {
+      e.preventDefault();
+          //Is the email field valid
+          const eValid = !this.email.current.validity.typeMismatch && 
                           !this.email.current.validity.valueMissing;
-         //Is the password field valid?
-         const pValid = !this.password.current.validity.patternMismatch && 
-                            !this.password.current.validity.valueMissing;
-        //Is account valid?
-        const aValid = eValid && pValid && this.props.accountValid(this.email.current.value,this.password.current.value);
-        if (eValid && pValid && aValid) {
-            this.props.logInUser(this.email.current.value);
-        } else { //at least one field is invalid--trigger re-render
-            this.setState({emailValid: eValid,
-                           passwordValid: pValid,
-                           accountValid: aValid});
-        }
-    }
+          //Is the password field valid?
+          const pValid = !this.password.current.validity.patternMismatch && 
+                          !this.password.current.validity.valueMissing;
+      if (!eValid || !pValid) {
+          this.setState({
+              emailValid: eValid,
+              passwordValid: pValid,
+              accountValid: true});
+          return;
+      }
+      //Can we log in user?
+      const aValid = await this.props.authenticateUser(this.email.current.value,this.password.current.value);
+      if (aValid) {
+          window.open('/', '_self'); //App.componentDidMount() takes it from here
+      } else { //at least one field is invalid--trigger re-render of LoginPage component
+          this.setState({emailValid: eValid,
+                          passwordValid: pValid,
+                          accountValid: aValid});
+      } 
+  
+  }
 
-    createAccountDone = (data) => {
-        this.props.createAccount(data);
-        this.setState({showCreateAccount: false,
-                       showAccountCreated: true,
-                        accountCreatedEmail: data.accountData.email});
+    handleOAuthLogin = (provider) => {
+      window.open(`/auth/${provider}`,"_self");
     }
+  
+    handleOAuthLoginClick = (provider) => {
+      this.setState({[provider + "Icon"] : "spinner",
+                     [provider + "Label"] : "Connecting..."});
+      setTimeout(() => this.handleOAuthLogin(provider),1000);
+   }
+
+    createAccountDone = async (data) => {
+        const result = await this.props.createAccount(data);
+        this.setState({showCreateAccount: false,
+                        showAccountCreated: true,
+                        accountCreatedResult: result});
+      }
 
     createAccountCancel = () => {
         this.setState({showCreateAccount: false});
@@ -169,6 +192,21 @@ class LoginPage extends React.Component {
                     <button id="resetPasswordBtn" className="nav-link btn btn-link">Reset Password</button>
                 </li>
                 </ul>
+                <div className="centered">
+                <button type="button" className="btn btn-github" id="button111"
+                  onClick={() => this.handleOAuthLoginClick("github")}>
+                  <FontAwesomeIcon icon={this.state.githubIcon} 
+                                   className={this.state.githubIcon == "spinner" ? "fa-spin" : ""}/>
+                  &nbsp;{this.state.githubLabel}
+                </button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" className="btn btn-google" id="googleButton"
+                  onClick={() => this.handleOAuthLoginClick("google")}>
+                  <FontAwesomeIcon icon={this.state.googleIcon} 
+                                   className={this.state.googleIcon == "spinner" ? "fa-spin" : ""}/>
+                  &nbsp;{this.state.googleLabel}
+                </button>
+                </div>
             </div>  
         )
     }

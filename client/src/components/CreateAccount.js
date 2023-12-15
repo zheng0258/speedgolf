@@ -87,7 +87,7 @@ class CreateAccount extends React.Component {
       }
     }
 
-    handleSubmit = (event) => {
+    handleSubmit = async (event) => {
         event.preventDefault();
         //Are fields valid?
         const eValid = this.emailIsValid(this.state.email);
@@ -95,12 +95,12 @@ class CreateAccount extends React.Component {
         const rpValid = (this.state.password === this.state.repeatPassword);
         const sqValid = (this.state.securityQuestion.length > 0);
         const saValid = (this.state.securityAnswer.length > 0);
-        const acctAvail = (!eValid || !this.props.accountExists(this.state.email));
+        const acctAvail = !(await this.props.accountExists(this.state.email));
         if (eValid && pValid && rpValid && sqValid && saValid && acctAvail) { 
             //All fields valid: create account
             const newAccount = {
                 accountData: {
-                    email: this.state.email,
+                    id: this.state.email,
                     password: this.state.password,
                     securityQuestion: this.state.securityQuestion,
                     securityAnswer: this.state.securityAnswer
@@ -113,12 +113,10 @@ class CreateAccount extends React.Component {
                     bio: "",
                     homeCourse: "",
                     firstRound: "",
-                    personalBest: {strokes: "",minutes: "", seconds: "", course: ""},
+                    personalBest: {},
                     clubs: {},
                     clubComments: ""
-                },
-                rounds: [],
-                roundCount: 0
+                }
             };
             this.props.createAccountDone(newAccount);
         } else { //At least one field invalid
@@ -237,7 +235,7 @@ class CreateAccount extends React.Component {
                 />
               </label>  
               <div id="passwordDescr" className="form-text">
-                Password must be at least eight characters with at least one upper case letter, one upper case letter, and one number
+                Password must be at least eight characters with at least one upper case letter, one lower case letter, and one number
                 </div>
               </div>
               <div className="mb-3 centered">
@@ -337,7 +335,7 @@ class CreateAccount extends React.Component {
               </div>
               </div>
               <div className="mode-page-btn-container">
-                <button type="submit" className="mode-page-btn action-dialog action-button">
+                <button type="submit" className="mode-page-btn action-dialog action-button" id="create">
                     <FontAwesomeIcon icon="user-plus"/>
                     &nbsp;Create Account
                 </button>

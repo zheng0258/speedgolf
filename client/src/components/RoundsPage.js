@@ -18,6 +18,7 @@ class RoundsPage extends React.Component {
 
 
     deleteRound = () => {
+        console.log(this.state.deleteId);
         this.props.deleteRound(this.state.deleteId);
         this.setState({deleteToastOpen: true});
         this.setState({deleteModalOpen: false});
@@ -82,23 +83,15 @@ class RoundsPage extends React.Component {
                     setMode={this.setMode}
                     toggleModalOpen={this.props.toggleModalOpen} />
             );
-        case RoundsMode.EDITROUND:
-            let i;
-            for (i = 0; i < this.props.rounds.length; ++i) {
-                if (this.props.rounds[i].roundNum === this.state.editId) {
-                    //console.log(this.props.rounds[i].roundNum,this.state.editId,i);
-                    break;
-                }
-            }
-            //console.log(this.state.editId,i)
-            return (
-            <RoundForm mode={this.state.mode}
-                editId = {this.state.editId}
-                roundData={this.props.rounds[i]}
-                saveRound={this.props.updateRound}
-                setMode={this.setMode}
-                toggleModalOpen={this.props.toggleModalOpen} />
-            );
+            case RoundsMode.EDITROUND:
+                return (
+                <RoundForm mode={this.state.mode}
+                    editId = {this.state.editId}
+                    roundData={this.props.rounds[this.state.editId]}
+                    saveRound={this.props.updateRound}
+                    setMode={this.setMode}
+                    toggleModalOpen={this.props.toggleModalOpen} />
+                );
         }
     }  
 

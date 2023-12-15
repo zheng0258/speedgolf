@@ -57,16 +57,15 @@ class RoundForm extends React.Component {
   
 
     handleSubmit = (event) => {
-        event.preventDefault();
-        this.setState({btnIcon: "spinner", btnLabel: "Saving..."});
-        setTimeout(this.handleSubmitCallback,1000);
-    }
+      event.preventDefault();
+      this.setState({btnIcon: "spinner", btnLabel: "Saving..."},this.handleSubmitCallback);
+  }
 
-    handleSubmitCallback = () => {
+    handleSubmitCallback = async() => {
         const newRound = {...this.state};
         delete newRound.btnIcon;
         delete newRound.btnLabel;
-        this.props.saveRound(newRound);
+        const res = await this.props.saveRound(newRound,this.props.editId);
         this.props.toggleModalOpen();
         this.props.setMode(RoundsMode.ROUNDSTABLE);
     }
@@ -85,7 +84,7 @@ class RoundForm extends React.Component {
                 <label htmlFor="roundDate" className="form-label">Date:
                     <input id="roundDate" name="date"  
                     className="form-control centered" type="date" 
-                    aria-describedby="roundDateDescr" value={this.state.date} 
+                    aria-describedby="roundDateDescr" value={this.state.date.substr(0,10)} 
                     onChange={this.handleChange} required/>
                 </label>
                 <div id="roundDateDescr" className="form-text">
